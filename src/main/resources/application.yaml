@@ -105,3 +105,20 @@ logging:
   level:
     root: INFO
     com.bookstore: DEBUG
+
+# ============================================================
+# S3
+# ============================================================
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+
+# ============================================================
+# JWT
+# ============================================================
+
+jwt:
+  secret: ${JWT_SECRET:change-this-secret-for-local-development-only}
+  expiration: ${JWT_EXPIRATION:86400000}
