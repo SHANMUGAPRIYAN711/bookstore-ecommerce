@@ -1,5 +1,6 @@
 package com.bookstore.cart.service;
 
+import com.bookstore.audit.annotation.Auditable;
 import com.bookstore.book.entity.Book;
 import com.bookstore.book.repository.BookRepository;
 import com.bookstore.cart.dto.AddToCartRequest;
@@ -32,6 +33,10 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
 
+    @Auditable(
+            action = "GET_CART",
+            entity = "CART"
+    )
     @Override
     public CartResponse getCart(UUID userId) {
 
@@ -40,6 +45,10 @@ public class CartServiceImpl implements CartService {
         return mapToCartResponse(cart);
     }
 
+    @Auditable(
+            action = "ADD_TO_CART",
+            entity = "CART"
+    )
     @Override
     public CartResponse addToCart(
             UUID userId,
@@ -83,6 +92,10 @@ public class CartServiceImpl implements CartService {
         return mapToCartResponse(cart);
     }
 
+    @Auditable(
+            action = "UPDATE_CART",
+            entity = "CART"
+    )
     @Override
     public CartResponse updateCartItem(
             UUID userId,
@@ -107,6 +120,10 @@ public class CartServiceImpl implements CartService {
         );
     }
 
+    @Auditable(
+            action = "REMOVE_FROM_CART",
+            entity = "CART"
+    )
     @Override
     public void removeCartItem(
             UUID userId,
@@ -128,6 +145,10 @@ public class CartServiceImpl implements CartService {
         cartItemRepository.delete(cartItem);
     }
 
+    @Auditable(
+            action = "CLEAR_CART",
+            entity = "CART"
+    )
     @Override
     public void clearCart(UUID userId) {
 
