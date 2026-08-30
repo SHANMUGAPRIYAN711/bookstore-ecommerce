@@ -1,5 +1,6 @@
 package com.bookstore.storage.service;
 
+import com.bookstore.audit.annotation.Auditable;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.storage.dto.FileUploadResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,6 @@ public class S3StorageService implements StorageService {
 
     /**
      * Maximum allowed file size.
-     *
-     * <p>
-     * The application configuration also limits multipart uploads
-     * to 10 MB.
-     * </p>
      */
     private static final long MAX_FILE_SIZE =
             10 * 1024 * 1024L;
@@ -65,6 +61,10 @@ public class S3StorageService implements StorageService {
      * Uploads a file to Amazon S3.
      */
     @Override
+    @Auditable(
+            action = "UPLOAD_FILE",
+            entity = "STORAGE"
+    )
     public FileUploadResponse uploadFile(
             MultipartFile file
     ) {
@@ -200,9 +200,9 @@ public class S3StorageService implements StorageService {
                 lastDot < originalFileName.length() - 1) {
 
             extension =
-                    originalFileName.substring(
-                            lastDot
-                    ).toLowerCase();
+                    originalFileName
+                            .substring(lastDot)
+                            .toLowerCase();
         }
 
         return UUID.randomUUID()
