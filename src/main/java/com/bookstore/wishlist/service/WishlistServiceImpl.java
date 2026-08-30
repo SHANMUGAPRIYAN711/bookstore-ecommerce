@@ -1,5 +1,6 @@
 package com.bookstore.wishlist.service;
 
+import com.bookstore.audit.annotation.Auditable;
 import com.bookstore.book.entity.Book;
 import com.bookstore.book.repository.BookRepository;
 import com.bookstore.common.enums.BookStatus;
@@ -26,6 +27,10 @@ public class WishlistServiceImpl implements WishlistService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
 
+    @Auditable(
+            action = "GET_WISHLIST",
+            entity = "WISHLIST"
+    )
     @Override
     @Transactional(readOnly = true)
     public List<WishlistItemResponse> getWishlist(UUID userId) {
@@ -39,6 +44,10 @@ public class WishlistServiceImpl implements WishlistService {
                 .toList();
     }
 
+    @Auditable(
+            action = "ADD_TO_WISHLIST",
+            entity = "WISHLIST"
+    )
     @Override
     public WishlistItemResponse addToWishlist(
             UUID userId,
@@ -75,6 +84,10 @@ public class WishlistServiceImpl implements WishlistService {
         return mapToResponse(savedItem);
     }
 
+    @Auditable(
+            action = "REMOVE_FROM_WISHLIST",
+            entity = "WISHLIST"
+    )
     @Override
     public void removeFromWishlist(
             UUID userId,
