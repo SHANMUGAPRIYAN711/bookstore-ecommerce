@@ -1,5 +1,6 @@
 package com.bookstore.book.service;
 
+import com.bookstore.audit.annotation.Auditable;
 import com.bookstore.book.dto.BookCreateRequest;
 import com.bookstore.book.dto.BookResponse;
 import com.bookstore.book.dto.BookSearchRequest;
@@ -29,6 +30,10 @@ public class BookServiceImpl implements BookService {
     /**
      * Creates a new book.
      */
+    @Auditable(
+            action = "CREATE_BOOK",
+            entity = "BOOK"
+    )
     @Override
     public BookResponse createBook(BookCreateRequest request) {
 
@@ -177,6 +182,10 @@ public class BookServiceImpl implements BookService {
     /**
      * Updates an existing book.
      */
+    @Auditable(
+            action = "UPDATE_BOOK",
+            entity = "BOOK"
+    )
     @Override
     public BookResponse updateBook(
             UUID id,
@@ -288,6 +297,10 @@ public class BookServiceImpl implements BookService {
     /**
      * Soft deletes a book by marking it INACTIVE.
      */
+    @Auditable(
+            action = "DELETE_BOOK",
+            entity = "BOOK"
+    )
     @Override
     public void deleteBook(UUID id) {
 
@@ -353,11 +366,6 @@ public class BookServiceImpl implements BookService {
 
     /**
      * Restricts sorting to known Book entity properties.
-     *
-     * <p>
-     * This prevents invalid property names from reaching Spring Data
-     * and keeps API sorting predictable.
-     * </p>
      */
     private String resolveSortField(String sortBy) {
 
@@ -368,23 +376,14 @@ public class BookServiceImpl implements BookService {
         return switch (sortBy.trim()) {
 
             case "id" -> "id";
-
             case "title" -> "title";
-
             case "isbn" -> "isbn";
-
             case "author" -> "author";
-
             case "category" -> "category";
-
             case "price" -> "price";
-
             case "stockQuantity" -> "stockQuantity";
-
             case "createdAt" -> "createdAt";
-
             case "updatedAt" -> "updatedAt";
-
             case "status" -> "status";
 
             default -> throw new BadRequestException(
