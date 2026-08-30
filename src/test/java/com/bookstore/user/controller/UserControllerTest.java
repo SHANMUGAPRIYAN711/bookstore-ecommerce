@@ -1,13 +1,17 @@
 package com.bookstore.user.controller;
 
 import com.bookstore.common.enums.UserStatus;
+import com.bookstore.security.JwtService;
 import com.bookstore.user.dto.UserResponse;
 import com.bookstore.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.util.UUID;
 
@@ -29,7 +33,22 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    /**
+     * Mock required by JwtAuthenticationFilter
+     * when the MVC test context loads the security configuration.
+     */
+    @MockitoBean
+    private JwtService jwtService;
+
+    /**
+     * Mock required by JwtAuthenticationFilter and
+     * Spring Security authentication configuration.
+     */
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+
     @Test
+    @WithMockUser(username = "ishaan@gmail.com", roles = "CUSTOMER")
     void register_shouldReturn201() throws Exception {
 
         UserResponse response = UserResponse.builder()
@@ -54,6 +73,7 @@ class UserControllerTest {
 
         mockMvc.perform(
                         post("/api/users")
+                                .with(csrf())
                                 .contentType("application/json")
                                 .content(request)
                 )
@@ -61,6 +81,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "ishaan@gmail.com", roles = "CUSTOMER")
     void getUser_shouldReturn200() throws Exception {
 
         UUID id = UUID.randomUUID();
@@ -82,6 +103,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "ishaan@gmail.com", roles = "CUSTOMER")
     void updateProfile_shouldReturn200() throws Exception {
 
         UUID id = UUID.randomUUID();
@@ -106,6 +128,7 @@ class UserControllerTest {
 
         mockMvc.perform(
                         put("/api/users/{id}", id)
+                                .with(csrf())
                                 .contentType("application/json")
                                 .content(request)
                 )
@@ -113,6 +136,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "ishaan@gmail.com", roles = "CUSTOMER")
     void updateStatus_shouldReturn200() throws Exception {
 
         UUID id = UUID.randomUUID();
@@ -127,6 +151,7 @@ class UserControllerTest {
 
         mockMvc.perform(
                         patch("/api/users/{id}/status", id)
+                                .with(csrf())
                                 .param("status", "BLOCKED")
                 )
                 .andExpect(status().isOk());
