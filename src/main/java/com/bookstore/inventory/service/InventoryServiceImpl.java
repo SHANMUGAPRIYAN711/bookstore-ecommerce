@@ -1,5 +1,6 @@
 package com.bookstore.inventory.service;
 
+import com.bookstore.audit.annotation.Auditable;
 import com.bookstore.book.entity.Book;
 import com.bookstore.book.repository.BookRepository;
 import com.bookstore.exception.BadRequestException;
@@ -43,17 +44,25 @@ public class InventoryServiceImpl implements InventoryService {
     /**
      * Updates the stock quantity to an exact value.
      */
+    @Auditable(
+            action = "UPDATE_STOCK",
+            entity = "INVENTORY"
+    )
     @Override
     public InventoryResponse updateStock(
             UUID bookId,
             UpdateInventoryRequest request) {
 
         if (request == null) {
-            throw new BadRequestException("Inventory update request is required");
+            throw new BadRequestException(
+                    "Inventory update request is required"
+            );
         }
 
         if (request.getStockQuantity() == null) {
-            throw new BadRequestException("Stock quantity is required");
+            throw new BadRequestException(
+                    "Stock quantity is required"
+            );
         }
 
         if (request.getStockQuantity() < 0) {
@@ -64,9 +73,12 @@ public class InventoryServiceImpl implements InventoryService {
 
         Book book = findBook(bookId);
 
-        book.setStockQuantity(request.getStockQuantity());
+        book.setStockQuantity(
+                request.getStockQuantity()
+        );
 
-        Book savedBook = bookRepository.save(book);
+        Book savedBook =
+                bookRepository.save(book);
 
         return mapToResponse(savedBook);
     }
@@ -74,6 +86,10 @@ public class InventoryServiceImpl implements InventoryService {
     /**
      * Increases the current stock quantity.
      */
+    @Auditable(
+            action = "INCREASE_STOCK",
+            entity = "INVENTORY"
+    )
     @Override
     public InventoryResponse increaseStock(
             UUID bookId,
@@ -83,13 +99,18 @@ public class InventoryServiceImpl implements InventoryService {
 
         Book book = findBook(bookId);
 
-        int currentStock = book.getStockQuantity();
+        int currentStock =
+                book.getStockQuantity();
 
-        int updatedStock = currentStock + quantity;
+        int updatedStock =
+                currentStock + quantity;
 
-        book.setStockQuantity(updatedStock);
+        book.setStockQuantity(
+                updatedStock
+        );
 
-        Book savedBook = bookRepository.save(book);
+        Book savedBook =
+                bookRepository.save(book);
 
         return mapToResponse(savedBook);
     }
@@ -102,6 +123,10 @@ public class InventoryServiceImpl implements InventoryService {
      * than the currently available stock.
      * </p>
      */
+    @Auditable(
+            action = "DECREASE_STOCK",
+            entity = "INVENTORY"
+    )
     @Override
     public InventoryResponse decreaseStock(
             UUID bookId,
@@ -111,19 +136,25 @@ public class InventoryServiceImpl implements InventoryService {
 
         Book book = findBook(bookId);
 
-        int currentStock = book.getStockQuantity();
+        int currentStock =
+                book.getStockQuantity();
 
         if (quantity > currentStock) {
             throw new BadRequestException(
-                    "Insufficient stock. Available stock: " + currentStock
+                    "Insufficient stock. Available stock: "
+                            + currentStock
             );
         }
 
-        int updatedStock = currentStock - quantity;
+        int updatedStock =
+                currentStock - quantity;
 
-        book.setStockQuantity(updatedStock);
+        book.setStockQuantity(
+                updatedStock
+        );
 
-        Book savedBook = bookRepository.save(book);
+        Book savedBook =
+                bookRepository.save(book);
 
         return mapToResponse(savedBook);
     }
@@ -166,13 +197,16 @@ public class InventoryServiceImpl implements InventoryService {
     private Book findBook(UUID bookId) {
 
         if (bookId == null) {
-            throw new BadRequestException("Book ID is required");
+            throw new BadRequestException(
+                    "Book ID is required"
+            );
         }
 
         return bookRepository.findById(bookId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Book not found with id: " + bookId
+                                "Book not found with id: "
+                                        + bookId
                         )
                 );
     }
@@ -183,7 +217,9 @@ public class InventoryServiceImpl implements InventoryService {
     private void validateQuantity(Integer quantity) {
 
         if (quantity == null) {
-            throw new BadRequestException("Quantity is required");
+            throw new BadRequestException(
+                    "Quantity is required"
+            );
         }
 
         if (quantity < 0) {
@@ -201,8 +237,12 @@ public class InventoryServiceImpl implements InventoryService {
         return InventoryResponse.builder()
                 .bookId(book.getId())
                 .bookTitle(book.getTitle())
-                .stockQuantity(book.getStockQuantity())
-                .available(book.getStockQuantity() > 0)
+                .stockQuantity(
+                        book.getStockQuantity()
+                )
+                .available(
+                        book.getStockQuantity() > 0
+                )
                 .build();
     }
 }
