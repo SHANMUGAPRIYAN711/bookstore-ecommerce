@@ -2,26 +2,30 @@ package com.bookstore.storage.service;
 
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.storage.dto.FileUploadResponse;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Utilities;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.io.ByteArrayInputStream;
-import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -34,19 +38,24 @@ class S3StorageServiceTest {
     private S3Client s3Client;
 
     @Mock
-    private S3Utilities s3Utilities;
+    private S3Presigner s3Presigner;
 
     @Mock
     private MultipartFile multipartFile;
 
     private S3StorageService storageService;
 
+    // ============================================================
+    // SETUP
+    // ============================================================
+
     @BeforeEach
     void setUp() {
 
         storageService =
                 new S3StorageService(
-                        s3Client
+                        s3Client,
+                        s3Presigner
                 );
 
         ReflectionTestUtils.setField(
@@ -56,12 +65,20 @@ class S3StorageServiceTest {
         );
     }
 
+    // ============================================================
+    // SUCCESSFUL UPLOAD
+    // ============================================================
+
     @Test
     void uploadFile_shouldUploadSuccessfully()
             throws Exception {
 
         byte[] fileContent =
                 "test-image-content".getBytes();
+
+        // --------------------------------------------------------
+        // Configure MultipartFile mock
+        // --------------------------------------------------------
 
         when(multipartFile.isEmpty())
                 .thenReturn(false);
@@ -84,23 +101,18 @@ class S3StorageServiceTest {
                         )
                 );
 
-        when(s3Client.utilities())
-                .thenReturn(s3Utilities);
-
-        when(
-                s3Utilities.getUrl(
-                        any(GetUrlRequest.class)
-                )
-        ).thenReturn(
-                URI.create(
-                        "https://test-bucket.s3.ap-south-1.amazonaws.com/test-key.png"
-                ).toURL()
-        );
+        // --------------------------------------------------------
+        // Execute upload
+        // --------------------------------------------------------
 
         FileUploadResponse response =
                 storageService.uploadFile(
                         multipartFile
                 );
+
+        // --------------------------------------------------------
+        // Verify response
+        // --------------------------------------------------------
 
         assertNotNull(response);
 
@@ -123,27 +135,47 @@ class S3StorageServiceTest {
                 response.getObjectKey()
         );
 
+        /*
+         * Object key should be generated under
+         * the uploads/ prefix.
+         */
+        assertTrue(
+                response.getObjectKey()
+                        .startsWith("uploads/")
+        );
+
+        /*
+         * The original file extension should be preserved.
+         */
         assertTrue(
                 response.getObjectKey()
                         .endsWith(".png")
         );
 
-        assertEquals(
-                "https://test-bucket.s3.ap-south-1.amazonaws.com/test-key.png",
+        /*
+         * Bucket is private.
+         *
+         * Therefore uploadFile() does not return
+         * a permanent public S3 URL.
+         */
+        assertNull(
                 response.getFileUrl()
         );
+
+        // --------------------------------------------------------
+        // Verify S3 upload
+        // --------------------------------------------------------
 
         verify(s3Client)
                 .putObject(
                         any(PutObjectRequest.class),
                         any(RequestBody.class)
                 );
-
-        verify(s3Client.utilities())
-                .getUrl(
-                        any(GetUrlRequest.class)
-                );
     }
+
+    // ============================================================
+    // NULL FILE
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectNullFile() {
@@ -156,10 +188,18 @@ class S3StorageServiceTest {
                         )
         );
 
+        /*
+         * S3 should never be contacted when validation
+         * fails before upload.
+         */
         verifyNoInteractions(
                 s3Client
         );
     }
+
+    // ============================================================
+    // EMPTY FILE
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectEmptyFile() {
@@ -179,6 +219,10 @@ class S3StorageServiceTest {
                 s3Client
         );
     }
+
+    // ============================================================
+    // FILE ABOVE 10 MB
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectFileAbove10Mb() {
@@ -203,6 +247,10 @@ class S3StorageServiceTest {
                 s3Client
         );
     }
+
+    // ============================================================
+    // UNSUPPORTED CONTENT TYPE
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectUnsupportedContentType() {
@@ -229,6 +277,10 @@ class S3StorageServiceTest {
         );
     }
 
+    // ============================================================
+    // MISSING CONTENT TYPE
+    // ============================================================
+
     @Test
     void uploadFile_shouldRejectMissingContentType() {
 
@@ -253,6 +305,10 @@ class S3StorageServiceTest {
                 s3Client
         );
     }
+
+    // ============================================================
+    // MISSING FILE NAME
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectMissingFileName() {
@@ -281,6 +337,10 @@ class S3StorageServiceTest {
                 s3Client
         );
     }
+
+    // ============================================================
+    // BLANK FILE NAME
+    // ============================================================
 
     @Test
     void uploadFile_shouldRejectBlankFileName() {

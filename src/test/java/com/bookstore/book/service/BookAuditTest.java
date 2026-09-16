@@ -9,11 +9,14 @@ import com.bookstore.book.dto.BookUpdateRequest;
 import com.bookstore.book.entity.Book;
 import com.bookstore.book.repository.BookRepository;
 import com.bookstore.common.enums.BookStatus;
+import com.bookstore.storage.service.StorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import com.bookstore.storage.service.StorageService;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
@@ -42,6 +45,12 @@ class BookAuditTest {
     private BookRepository bookRepository;
 
     @Mock
+    private StorageService storageService;
+
+    @Mock
+    private BookCacheService bookCacheService;
+
+    @Mock
     private AuditService auditService;
 
     private BookService bookService;
@@ -50,7 +59,11 @@ class BookAuditTest {
     void setUp() {
 
         BookServiceImpl target =
-                new BookServiceImpl(bookRepository);
+                new BookServiceImpl(
+                        bookRepository,
+                        storageService,
+                        bookCacheService
+                );
 
         AuditAspect auditAspect =
                 new AuditAspect(auditService);
@@ -86,7 +99,7 @@ class BookAuditTest {
                         .category("Programming")
                         .price(new BigDecimal("799.00"))
                         .stockQuantity(10)
-                        .imageUrl("https://example.com/book.jpg")
+                        .imageKey("https://example.com/book.jpg")
                         .build();
 
         Book savedBook =

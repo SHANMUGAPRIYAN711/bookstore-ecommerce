@@ -17,9 +17,9 @@ import java.math.BigDecimal;
  * Request DTO used by authorized users to create a new book.
  *
  * <p>
- * The image itself is not uploaded through this DTO. Image upload is
- * handled by the storage/S3 module and the resulting object URL or key
- * is associated with the book separately.
+ * The book cover image is uploaded separately through the storage
+ * module. After the upload succeeds, the returned S3 object key
+ * can be supplied through this DTO.
  * </p>
  */
 @Getter
@@ -33,53 +33,82 @@ public class BookCreateRequest {
      * Book title.
      */
     @NotBlank(message = "Title is required")
-    @Size(max = 255)
+    @Size(
+            max = 255,
+            message = "Title must not exceed 255 characters"
+    )
     private String title;
 
     /**
      * International Standard Book Number.
      */
     @NotBlank(message = "ISBN is required")
-    @Size(max = 20)
+    @Size(
+            max = 20,
+            message = "ISBN must not exceed 20 characters"
+    )
     private String isbn;
 
     /**
      * Book author.
      */
     @NotBlank(message = "Author is required")
-    @Size(max = 255)
+    @Size(
+            max = 255,
+            message = "Author must not exceed 255 characters"
+    )
     private String author;
 
     /**
      * Book description.
      */
-    @Size(max = 5000)
+    @Size(
+            max = 5000,
+            message = "Description must not exceed 5000 characters"
+    )
     private String description;
 
     /**
      * Book category.
      */
     @NotBlank(message = "Category is required")
-    @Size(max = 100)
+    @Size(
+            max = 100,
+            message = "Category must not exceed 100 characters"
+    )
     private String category;
 
     /**
      * Selling price.
      */
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = false)
+    @DecimalMin(
+            value = "0.0",
+            inclusive = false,
+            message = "Price must be greater than zero"
+    )
     private BigDecimal price;
 
     /**
      * Initial inventory quantity.
      */
     @NotNull(message = "Stock quantity is required")
-    @PositiveOrZero(message = "Stock quantity cannot be negative")
+    @PositiveOrZero(
+            message = "Stock quantity cannot be negative"
+    )
     private Integer stockQuantity;
 
     /**
-     * S3 image URL or object reference.
+     * S3 object key of the book cover image.
+     *
+     * <p>
+     * Example:
+     * uploads/73c97b3e-cffe-4546-9bcc-3f597d5a8137.jpg
+     * </p>
      */
-    @Size(max = 1000)
-    private String imageUrl;
+    @Size(
+            max = 500,
+            message = "Image key must not exceed 500 characters"
+    )
+    private String imageKey;
 }

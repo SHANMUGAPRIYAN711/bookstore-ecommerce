@@ -16,7 +16,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/bookstore_db
     username: postgres
-    password: Shanmu@123
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   # ----------------------------------------------------------
@@ -52,6 +52,22 @@ spring:
     username: guest
     password: guest
 
+# ============================================================
+# EMAIL / SMTP
+# ============================================================
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   # ----------------------------------------------------------
   # FILE UPLOAD
   # ----------------------------------------------------------
@@ -67,7 +83,7 @@ spring:
 # ============================================================
 
 server:
-  port: 8080
+  port: 8082
 
 
 # ============================================================
@@ -111,9 +127,9 @@ logging:
 # ============================================================
 
 aws:
-  region: ${AWS_REGION:ap-south-1}
+  region: ${AWS_REGION:ap-south-2}
   s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME}
+    bucket-name: ${AWS_S3_BUCKET_NAME:bookstore-backend-images-509581811051-ap-south-2-an}
 
 # ============================================================
 # JWT

@@ -46,6 +46,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.bookstore.notification.producer.NotificationProducer;
 
 @ExtendWith(MockitoExtension.class)
 class OrderAuditTest {
@@ -64,6 +65,9 @@ class OrderAuditTest {
 
     @Mock
     private InventoryService inventoryService;
+
+    @Mock
+    private NotificationProducer notificationProducer;
 
     @Mock
     private AuditService auditService;
@@ -100,7 +104,8 @@ class OrderAuditTest {
                         userRepository,
                         addressRepository,
                         cartRepository,
-                        inventoryService
+                        inventoryService,
+                        notificationProducer
                 );
 
         AuditAspect auditAspect =

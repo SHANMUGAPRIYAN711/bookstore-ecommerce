@@ -49,6 +49,7 @@ public class AddressServiceImpl implements AddressService {
 
         Address address = Address.builder()
                 .user(user)
+                .addressType(request.getAddressType())
                 .addressLine1(request.getAddressLine1())
                 .addressLine2(request.getAddressLine2())
                 .city(request.getCity())
@@ -138,7 +139,9 @@ public class AddressServiceImpl implements AddressService {
                         }
                     });
         }
-
+        address.setAddressType(
+                request.getAddressType()
+        );
         address.setAddressLine1(
                 request.getAddressLine1()
         );
@@ -200,33 +203,16 @@ public class AddressServiceImpl implements AddressService {
 
         return AddressResponse.builder()
                 .id(address.getId())
-                .addressLine1(
-                        address.getAddressLine1()
-                )
-                .addressLine2(
-                        address.getAddressLine2()
-                )
-                .city(
-                        address.getCity()
-                )
-                .state(
-                        address.getState()
-                )
-                .postalCode(
-                        address.getPostalCode()
-                )
-                .country(
-                        address.getCountry()
-                )
-                .defaultAddress(
-                        address.isDefaultAddress()
-                )
-                .createdAt(
-                        address.getCreatedAt()
-                )
-                .updatedAt(
-                        address.getUpdatedAt()
-                )
+                .addressLine1(address.getAddressLine1())
+                .addressLine2(address.getAddressLine2())
+                .addressType(address.getAddressType())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
+                .defaultAddress(address.isDefaultAddress())
+                .createdAt(address.getCreatedAt())
+                .updatedAt(address.getUpdatedAt())
                 .build();
     }
 }

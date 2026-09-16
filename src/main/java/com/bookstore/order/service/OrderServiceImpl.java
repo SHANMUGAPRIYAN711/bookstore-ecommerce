@@ -12,6 +12,8 @@ import com.bookstore.common.enums.PaymentStatus;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ResourceNotFoundException;
 import com.bookstore.inventory.service.InventoryService;
+import com.bookstore.notification.dto.NotificationMessage;
+import com.bookstore.notification.producer.NotificationProducer;
 import com.bookstore.order.dto.CheckoutRequest;
 import com.bookstore.order.dto.OrderItemResponse;
 import com.bookstore.order.dto.OrderResponse;
@@ -43,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
     private final CartRepository cartRepository;
     private final InventoryService inventoryService;
+    private final NotificationProducer notificationProducer;
 
     @Override
     @Auditable(
@@ -225,6 +228,47 @@ public class OrderServiceImpl implements OrderService {
         cart.getItems().clear();
 
         cartRepository.save(cart);
+
+        /*
+         * Create notification message.
+         *
+         * This message contains the information
+         * required by the notification consumer
+         * to send the email.
+         */
+        NotificationMessage notification =
+                NotificationMessage.builder()
+                        .userId(user.getId())
+                        .recipientEmail(user.getEmail())
+                        .title("Order Confirmed")
+                        .message(
+                                "Your order "
+                                        + savedOrder.getOrderNumber()
+                                        + " has been placed successfully."
+                        )
+                        .type("ORDER_CREATED")
+                        .build();
+
+        /*
+         * Publish notification to RabbitMQ.
+         *
+         * OrderService does NOT send the email directly.
+         *
+         * OrderService
+         *       ↓
+         * NotificationProducer
+         *       ↓
+         * RabbitMQ
+         *       ↓
+         * NotificationConsumer
+         *       ↓
+         * EmailService
+         *       ↓
+         * Gmail SMTP
+         */
+        notificationProducer.sendNotification(
+                notification
+        );
 
         return mapToResponse(
                 savedOrder,
