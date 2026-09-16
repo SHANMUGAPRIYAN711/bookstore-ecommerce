@@ -9,20 +9,21 @@ import com.bookstore.book.repository.BookRepository;
 import com.bookstore.common.enums.BookStatus;
 import com.bookstore.exception.BadRequestException;
 import com.bookstore.exception.ResourceNotFoundException;
+import com.bookstore.storage.service.StorageService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,8 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,12 +49,22 @@ class BookServiceTest {
     @Mock
     private BookRepository bookRepository;
 
+    @Mock
+    private StorageService storageService;
+
+    @Mock
+    private BookCacheService bookCacheService;
+
     @InjectMocks
     private BookServiceImpl bookService;
 
     private UUID bookId;
 
     private Book book;
+
+    // ============================================================
+    // SETUP
+    // ============================================================
 
     @BeforeEach
     void setUp() {
@@ -64,9 +79,23 @@ class BookServiceTest {
                 .category("Technology")
                 .price(new BigDecimal("599.99"))
                 .stockQuantity(10)
-                .imageUrl("https://example.com/book.jpg")
+                .imageKey("uploads/book.jpg")
                 .status(BookStatus.ACTIVE)
                 .build();
+
+        book.setId(bookId);
+
+        /*
+         * BookServiceImpl generates a presigned URL while mapping
+         * the Book entity into BookResponse.
+         *
+         * Some tests do not reach the response mapping logic.
+         * Therefore lenient() prevents Mockito from reporting this
+         * shared stubbing as unnecessary.
+         */
+        lenient()
+                .when(storageService.generatePresignedUrl(anyString()))
+                .thenReturn("https://test-presigned-url");
     }
 
     // ============================================================
@@ -85,7 +114,7 @@ class BookServiceTest {
                         .category("Technology")
                         .price(new BigDecimal("599.99"))
                         .stockQuantity(10)
-                        .imageUrl("https://example.com/book.jpg")
+                        .imageKey("uploads/book.jpg")
                         .build();
 
         when(bookRepository.existsByIsbn(request.getIsbn()))
@@ -269,16 +298,6 @@ class BookServiceTest {
         Page<Book> page =
                 new PageImpl<>(
                         List.of(book)
-                );
-
-        Pageable pageable =
-                PageRequest.of(
-                        0,
-                        10,
-                        Sort.by(
-                                Sort.Direction.DESC,
-                                "createdAt"
-                        )
                 );
 
         when(bookRepository.findAll(any(Pageable.class)))
@@ -486,7 +505,7 @@ class BookServiceTest {
                         .category("Programming")
                         .price(new BigDecimal("799.99"))
                         .stockQuantity(25)
-                        .imageUrl("https://example.com/new-book.jpg")
+                        .imageKey("uploads/new-book.jpg")
                         .build();
 
         when(bookRepository.findById(bookId))

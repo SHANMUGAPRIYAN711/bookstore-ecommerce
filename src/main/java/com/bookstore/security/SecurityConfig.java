@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
 /**
  * Main Spring Security configuration for the Bookstore application.
@@ -32,6 +34,18 @@ public class SecurityConfig {
     }
 
     /**
+     * Creates the authentication manager used for
+     * username/password authentication.
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration)
+            throws Exception {
+
+        return configuration.getAuthenticationManager();
+    }
+
+    /**
      * Creates the authentication provider responsible for
      * username/password authentication.
      */
@@ -49,7 +63,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Configures Spring Security.
+     * Configures Spring Security for the application.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -58,31 +72,42 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                // REST API uses JWT, so CSRF protection is disabled.
                 .csrf(csrf -> csrf.disable())
 
+                // Configure username/password authentication provider.
                 .authenticationProvider(authenticationProvider)
 
+                // Use stateless authentication because JWT is used.
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // Configure endpoint authorization.
                 .authorizeHttpRequests(auth -> auth
-                        /*
-                         * User registration must be accessible before
-                         * the user has authenticated.
-                         */
+
+                        // Public endpoints
                         .requestMatchers(
-                                "/api/users"
+                                "/api/users",
+                                "/api/auth/login",
+                                "/api/notifications/test-email",
+
+                                // Swagger / OpenAPI
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+
+                                // Actuator health
+                                "/actuator/health"
                         ).permitAll()
 
-                        /*
-                         * All remaining endpoints require authentication.
-                         */
+                        // Everything else requires authentication.
                         .anyRequest().authenticated()
                 )
 
+                // Process JWT before Spring's username/password filter.
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class

@@ -1,5 +1,6 @@
 package com.bookstore.book.dto;
 
+import com.bookstore.common.enums.BookStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +12,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Response DTO representing a book returned by the bookstore REST API.
+ * Represents the book data stored in Redis.
  *
  * <p>
- * The image URL is generated dynamically from the private S3 object
- * key and therefore represents a temporary presigned URL.
+ * This DTO contains only persisted book information required to
+ * reconstruct a {@link BookResponse}. Temporary values such as the
+ * AWS S3 presigned image URL are intentionally not cached because
+ * presigned URLs expire after a limited period.
  * </p>
  */
 @Getter
@@ -23,7 +26,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookResponse {
+public class BookCacheData {
 
     /**
      * Book identifier.
@@ -66,16 +69,7 @@ public class BookResponse {
     private Integer stockQuantity;
 
     /**
-     * Temporary presigned URL for the book cover.
-     */
-    private String imageUrl;
-
-    /**
-     * S3 object key of the book cover.
-     *
-     * <p>
-     * This is the value persisted by the application.
-     * </p>
+     * S3 object key for the book cover.
      */
     private String imageKey;
 
@@ -90,9 +84,9 @@ public class BookResponse {
     private Long reviewCount;
 
     /**
-     * Indicates whether the book is available for purchase.
+     * Current catalog status.
      */
-    private boolean active;
+    private BookStatus status;
 
     /**
      * Creation timestamp.

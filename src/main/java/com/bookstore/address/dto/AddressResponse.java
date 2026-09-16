@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.bookstore.common.enums.AddressType;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -18,6 +19,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddressResponse {
+
+
 
     /**
      * Address identifier.
@@ -35,8 +38,14 @@ public class AddressResponse {
     private String addressLine2;
 
     /**
+     * Type of address, such as HOME, WORK, or OTHER.
+     */
+    private AddressType addressType;
+
+    /**
      * City.
      */
+
     private String city;
 
     /**

@@ -62,7 +62,7 @@ class BookControllerTest {
                 .category("Programming")
                 .price(new BigDecimal("45.00"))
                 .stockQuantity(10)
-                .imageUrl("https://example.com/clean-code.jpg")
+                .imageKey("https://example.com/clean-code.jpg")
                 .averageRating(4.5)
                 .reviewCount(10L)
                 .active(true)
@@ -86,7 +86,7 @@ class BookControllerTest {
                 .category("Programming")
                 .price(new BigDecimal("45.00"))
                 .stockQuantity(10)
-                .imageUrl("https://example.com/clean-code.jpg")
+                .imageKey("https://example.com/clean-code.jpg")
                 .build();
 
         BookResponse response = createBookResponse();

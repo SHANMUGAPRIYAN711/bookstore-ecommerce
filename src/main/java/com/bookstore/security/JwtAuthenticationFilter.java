@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
@@ -27,6 +28,7 @@ import java.io.IOException;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -95,17 +97,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
+
+                    log.info(
+                            "JWT AUTHENTICATED | username={} | authorities={}",
+                            userDetails.getUsername(),
+                            userDetails.getAuthorities()
+                    );
                 }
             }
 
         } catch (Exception exception) {
-            /*
-             * Invalid or malformed JWTs are not allowed to authenticate
-             * the request. The request continues through the filter chain,
-             * allowing Spring Security to handle authorization according
-             * to the configured security rules.
-             */
-        }
+
+        log.error(
+                "JWT AUTHENTICATION FAILED | URI={} | error={}",
+                request.getRequestURI(),
+                exception.getMessage(),
+                exception
+        );
+    }
 
         filterChain.doFilter(request, response);
     }
